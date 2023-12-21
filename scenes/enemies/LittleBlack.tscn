@@ -1,0 +1,167 @@
+[gd_scene load_steps=11 format=2]
+
+[ext_resource path="res://scenes/enemies/Enemy.tscn" type="PackedScene" id=1]
+[ext_resource path="res://assets/gameplay/smokes.png" type="Texture" id=3]
+[ext_resource path="res://Explosion.gd" type="Script" id=4]
+
+[sub_resource type="GDScript" id=1]
+script/source = "extends RigidBody2D
+
+export(int, 1, 1000) var health = 10
+export(PackedScene) var explosion_scene: PackedScene = preload(\"res://scenes/Explosion.tscn\")
+export(int, 0, 100000) var destroy_points = 500
+export(int, 0, 100000) var survive_points = 0
+var processed_velocity = Vector2()
+var processed_angular_velocity = Vector2()
+onready var max_health = health
+
+signal exploded
+
+func _physics_process(delta):
+	self.processed_velocity = self.linear_velocity
+	self.processed_angular_velocity = self.angular_velocity
+	
+func _integrate_forces(state):
+	var contact_counts = {}
+	for i in range(0, state.get_contact_count()):
+		var contact_id = state.get_contact_collider_id(i)
+		if not contact_counts.has(contact_id):
+			contact_counts[contact_id] = 1
+		else:
+			contact_counts[contact_id] += 1
+		
+	for i in range(0, state.get_contact_count()):
+		var contact = state.get_contact_collider_object(i)
+		var contact_velocity = state.get_contact_collider_velocity_at_position(i)
+		var R = self.global_position - state.get_contact_local_position(i)
+		var self_velocity = self.processed_velocity - self.processed_angular_velocity * Vector2(-R.y, R.x)
+		var v = contact_velocity - self_velocity
+		var m_self = self.mass
+		var m_contact = contact.mass if contact is RigidBody2D else 1000000000
+		var p = v.dot(state.get_contact_local_normal(i)) * (m_contact / (m_self + m_contact)) / contact_counts[contact.get_instance_id()]
+		get_damage(p * 0.05)
+
+func _on_Damageable_body_entered(body):
+	# get_damage(self.processed_velocity.length() * 0.05)
+	pass
+	
+func get_damage(damage):
+	damage = round(damage)
+	if damage > 0:
+		print(\"damage: \", damage)
+		self.health -= damage 
+		update_animator()
+		if self.health <=0:
+			explode()
+
+			
+func update_animator():
+	if $AnimationPlayer.get_animation_list().size() > 0:
+		var h_ratio = float(health) / float(max_health)
+		var current_animation_index = ceil(h_ratio * $AnimationPlayer.get_animation_list().size()) - 1
+		$AnimationPlayer.play($AnimationPlayer.get_animation_list()[current_animation_index])
+		
+func explode():
+	var explosion = explosion_scene.instance()
+	explosion.position = position	
+	get_parent().add_child(explosion)	
+	emit_signal(\"exploded\", self)	
+	queue_free()
+"
+
+[sub_resource type="Animation" id=2]
+resource_name = "default"
+length = 0.35
+step = 0.05
+tracks/0/type = "value"
+tracks/0/path = NodePath(".:region_rect")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0, 0.0663897, 0.116437, 0.171592, 0.221639, 0.278837, 0.359526 ),
+"transitions": PoolRealArray( 1, 1, 1, 1, 1, 1, 1 ),
+"update": 1,
+"values": [ Rect2( 911.652, 248.537, 46, 43 ), Rect2( 859.05, 879.792, 50.6146, 44.8929 ), Rect2( 500.016, 561.244, 91.1514, 80.125 ), Rect2( -1.90088, 818.329, 119.175, 117.46 ), Rect2( -0.186127, 589.454, 128.606, 120.032 ), Rect2( -0.186127, 459.92, 128.606, 126.891 ), Rect2( 406.805, 149.087, 131.856, 127.424 ) ]
+}
+
+[sub_resource type="PackedScene" id=3]
+_bundled = {
+"conn_count": 0,
+"conns": PoolIntArray(  ),
+"editable_instances": [  ],
+"names": PoolStringArray( "Explosion", "Sprite", "texture", "region_enabled", "region_rect", "script", "AnimationPlayer", "AnimationPlayer", "anims/default" ),
+"node_count": 2,
+"node_paths": [ NodePath(".") ],
+"nodes": PoolIntArray( -1, -1, 1, 0, -1, 4, 2, 0, 3, 1, 4, 2, 5, 3, 0, 1073741824, 0, 7, 6, -1, 1, 8, 4, 0 ),
+"variants": [ ExtResource( 3 ), true, Rect2( -0.186127, 459.92, 128.606, 126.891 ), ExtResource( 4 ), SubResource( 2 ) ],
+"version": 2
+}
+
+[sub_resource type="CircleShape2D" id=4]
+radius = 34.5549
+
+[sub_resource type="Animation" id=5]
+tracks/0/type = "value"
+tracks/0/path = NodePath("Texture:region_rect")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Rect2( 287, 334.217, 81, 63.783 ) ]
+}
+
+[sub_resource type="Animation" id=6]
+tracks/0/type = "value"
+tracks/0/path = NodePath("Texture:region_rect")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Rect2( 166.405, 334.217, 79.39, 63.783 ) ]
+}
+
+[sub_resource type="Animation" id=7]
+tracks/0/type = "value"
+tracks/0/path = NodePath("Texture:region_rect")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Rect2( 45.1147, 334.217, 79.39, 63.783 ) ]
+}
+
+[node name="LittleBlack" instance=ExtResource( 1 )]
+position = Vector2( 0.129112, -0.396851 )
+rotation = 1.5708
+script = SubResource( 1 )
+explosion_scene = SubResource( 3 )
+survive_points = 0
+
+[node name="Texture" parent="." index="0"]
+position = Vector2( 0.347744, -0.396851 )
+rotation = -1.5708
+region_rect = Rect2( 45.1147, 334.217, 79.39, 63.783 )
+
+[node name="CollisionShape2D" parent="." index="1"]
+position = Vector2( 1.10024, 1.58741 )
+rotation = -1.5708
+shape = SubResource( 4 )
+
+[node name="AnimationPlayer" parent="." index="2"]
+anims/1_colaps = SubResource( 5 )
+anims/2_avarage = SubResource( 6 )
+anims/3_healthy = SubResource( 7 )

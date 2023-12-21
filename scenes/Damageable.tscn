@@ -1,0 +1,29 @@
+[gd_scene load_steps=4 format=2]
+
+[ext_resource path="res://assets/gameplay/Рвлдвв.png" type="Texture" id=1]
+[ext_resource path="res://scenes/Damageable.gd" type="Script" id=2]
+
+[sub_resource type="CircleShape2D" id=1]
+radius = 32.8511
+
+[node name="Damageable" type="RigidBody2D" groups=[
+"Damageable",
+]]
+position = Vector2( 1.2294, -1.25992 )
+contacts_reported = 7
+contact_monitor = true
+script = ExtResource( 2 )
+survive_points = 1000
+
+[node name="Texture" type="Sprite" parent="."]
+position = Vector2( -8.83884, -3.88909 )
+texture = ExtResource( 1 )
+region_enabled = true
+region_rect = Rect2( 33, 6.33725, 98, 89.6628 )
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2( 2.51984, 7.55954 )
+shape = SubResource( 1 )
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="."]
+[connection signal="body_entered" from="." to="." method="_on_Damageable_body_entered"]

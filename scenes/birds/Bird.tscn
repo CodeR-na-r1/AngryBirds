@@ -1,0 +1,159 @@
+[gd_scene load_steps=9 format=2]
+
+[ext_resource path="res://scenes/Damageable.tscn" type="PackedScene" id=1]
+[ext_resource path="res://assets/gameplay/Рвлдвв.png" type="Texture" id=2]
+[ext_resource path="res://assets/gameplay/smokes.png" type="Texture" id=3]
+[ext_resource path="res://Explosion.gd" type="Script" id=4]
+
+[sub_resource type="GDScript" id=1]
+script/source = "extends \"res://scenes/Damageable.gd\"
+
+
+enum {
+	STATE_IDLE,
+	STATE_TRANSFERED, 
+	STATE_ATTACHED, 
+	STATE_DRAGGED, 
+	STATE_RELEASED,
+	STATE_LAUNCHED, 
+	STATE_TOUCHED
+}
+
+var state = STATE_IDLE
+var impulse = null
+var slingshot = null
+
+export(int, 120, 1200) var TRANSFER_SPEED = 600
+
+signal eliminated
+
+
+func _integrate_forces(s):
+	._integrate_forces(s)
+	
+	if state == STATE_TOUCHED and self.processed_velocity.length() < 2:
+		emit_signal(\"eliminated\", self)
+		state = STATE_IDLE
+	
+	if state == STATE_IDLE:
+		return 
+		
+	if s.get_contact_count() > 0 and state == STATE_LAUNCHED:
+		state = STATE_TOUCHED
+		
+	var launch_pos = slingshot.get_node(\"LaunchPoint\").get_global_position()
+	var diff_pos = launch_pos - get_global_position()
+	if Input.is_action_just_released(\"touch\") and state == STATE_DRAGGED:
+		impulse = slingshot.get_impulse()
+		state = STATE_RELEASED if impulse.x > 0 else STATE_ATTACHED
+	var lv = s.get_linear_velocity()
+	var av = s.get_angular_velocity()
+	var delta = 1 / s.get_step()
+	
+	#IMPLEMENT STATES
+	match state:
+		STATE_TRANSFERED:
+			if diff_pos.length() < TRANSFER_SPEED / delta :
+				lv = diff_pos * delta
+				state = STATE_ATTACHED
+				slingshot.attach_bird(self)
+			else:
+				lv = diff_pos.normalized() * TRANSFER_SPEED
+		STATE_ATTACHED:
+			lv = diff_pos * 40
+			av = - rotation * delta
+		STATE_DRAGGED:
+			var player_force = get_global_mouse_position() - launch_pos
+			var angle = diff_pos.angle()
+			av = (angle - rotation) * delta
+			if angle < -1.2 and angle > -2:
+				player_force = player_force.clamped(10)
+			else:
+				player_force = player_force.clamped(100)
+			lv = (player_force + diff_pos) * 40
+		STATE_RELEASED:
+			if diff_pos.length() < impulse.length() / delta:
+				state = STATE_LAUNCHED
+				slingshot.detach_bird()
+			else:
+				lv = diff_pos.normalized() * impulse.length()
+		STATE_LAUNCHED:
+			av = (lv.angle() - rotation) * delta
+	
+	s.set_linear_velocity(lv)
+	s.set_angular_velocity(av)
+	
+func attach_to(slingshot):
+	self.slingshot = slingshot
+	state = STATE_TRANSFERED
+	
+func _input_event(viewport, event, shape_idx):
+	if event.is_action_pressed(\"touch\") and state == STATE_ATTACHED:
+		state = STATE_DRAGGED
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+"
+
+[sub_resource type="Animation" id=2]
+resource_name = "default"
+length = 0.35
+step = 0.05
+tracks/0/type = "value"
+tracks/0/path = NodePath(".:region_rect")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0, 0.0663897, 0.116437, 0.171592, 0.221639, 0.278837, 0.359526 ),
+"transitions": PoolRealArray( 1, 1, 1, 1, 1, 1, 1 ),
+"update": 1,
+"values": [ Rect2( 911.652, 248.537, 46, 43 ), Rect2( 859.05, 879.792, 50.6146, 44.8929 ), Rect2( 500.016, 561.244, 91.1514, 80.125 ), Rect2( -1.90088, 818.329, 119.175, 117.46 ), Rect2( -0.186127, 589.454, 128.606, 120.032 ), Rect2( -0.186127, 459.92, 128.606, 126.891 ), Rect2( 406.805, 149.087, 131.856, 127.424 ) ]
+}
+
+[sub_resource type="PackedScene" id=3]
+_bundled = {
+"conn_count": 0,
+"conns": PoolIntArray(  ),
+"editable_instances": [  ],
+"names": PoolStringArray( "Explosion", "Sprite", "texture", "region_enabled", "region_rect", "script", "AnimationPlayer", "AnimationPlayer", "anims/default" ),
+"node_count": 2,
+"node_paths": [ NodePath(".") ],
+"nodes": PoolIntArray( -1, -1, 1, 0, -1, 4, 2, 0, 3, 1, 4, 2, 5, 3, 0, 1073741824, 0, 7, 6, -1, 1, 8, 4, 0 ),
+"variants": [ ExtResource( 3 ), true, Rect2( -0.186127, 459.92, 128.606, 126.891 ), ExtResource( 4 ), SubResource( 2 ) ],
+"version": 2
+}
+
+[sub_resource type="RectangleShape2D" id=4]
+extents = Vector2( 33.6625, 32.3529 )
+
+[node name="Bird" groups=[
+"Bird",
+] instance=ExtResource( 1 )]
+position = Vector2( -45.8095, 0.625206 )
+input_pickable = true
+can_sleep = false
+linear_damp = 0.0
+script = SubResource( 1 )
+health = 50
+explosion_scene = SubResource( 3 )
+
+[node name="Texture" parent="." index="0"]
+position = Vector2( -43.8406, 1.86265e-09 )
+texture = ExtResource( 2 )
+region_rect = Rect2( 34, 12, 95, 90.233 )
+
+[node name="CollisionShape2D" parent="." index="1"]
+position = Vector2( -28.9179, 5.44581 )
+shape = SubResource( 4 )
+
+[node name="AttachPoint" type="Position2D" parent="." index="2"]
+position = Vector2( -80.4663, 10.7491 )

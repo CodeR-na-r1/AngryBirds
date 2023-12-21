@@ -1,0 +1,21 @@
+[remap]
+
+importer="wav"
+type="AudioStreamSample"
+path="res://.import/проигрыш.wav-911e1d98b10e158efdcdb7e16c567201.sample"
+
+[deps]
+
+source_file="res://Audio/проигрыш.wav"
+dest_files=[ "res://.import/проигрыш.wav-911e1d98b10e158efdcdb7e16c567201.sample" ]
+
+[params]
+
+force/8_bit=false
+force/mono=false
+force/max_rate=false
+force/max_rate_hz=44100
+edit/trim=false
+edit/normalize=false
+edit/loop=false
+compress/mode=0

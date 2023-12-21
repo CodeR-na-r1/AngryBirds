@@ -1,0 +1,20 @@
+[gd_scene load_steps=4 format=2]
+
+[ext_resource path="res://scenes/Damageable.tscn" type="PackedScene" id=1]
+[ext_resource path="res://assets/gameplay/Ресурс 8 (2).png" type="Texture" id=2]
+
+[sub_resource type="RectangleShape2D" id=1]
+extents = Vector2( 40.9263, 40.7886 )
+
+[node name="Block" instance=ExtResource( 1 )]
+position = Vector2( 0.130203, 1.33483 )
+rotation = -1.5708
+
+[node name="Texture" parent="." index="0"]
+position = Vector2( 0.698349, -1.52588e-05 )
+texture = ExtResource( 2 )
+region_rect = Rect2( 0.281998, -0.931999, 84, 86 )
+
+[node name="CollisionShape2D" parent="." index="1"]
+position = Vector2( 1.09927, 0 )
+shape = SubResource( 1 )

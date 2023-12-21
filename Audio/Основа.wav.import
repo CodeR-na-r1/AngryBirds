@@ -1,0 +1,21 @@
+[remap]
+
+importer="wav"
+type="AudioStreamSample"
+path="res://.import/Основа.wav-f3a70c74cf217f3a67f1d3651a2a8663.sample"
+
+[deps]
+
+source_file="res://Audio/Основа.wav"
+dest_files=[ "res://.import/Основа.wav-f3a70c74cf217f3a67f1d3651a2a8663.sample" ]
+
+[params]
+
+force/8_bit=false
+force/mono=false
+force/max_rate=false
+force/max_rate_hz=44100
+edit/trim=false
+edit/normalize=false
+edit/loop=false
+compress/mode=0
